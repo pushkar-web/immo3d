@@ -176,9 +176,8 @@ function useBuildingMaterials(mat: StyleMaterialConfig) {
 
     const marbleMat = new THREE.MeshStandardMaterial({
       color: mat.marbleColor,
-      roughness: 0.12,
-      metalness: 0.1,
-      envMapIntensity: 1.8,
+      roughness: 0.25,
+      metalness: 0.05,
     });
 
     const doorMat = new THREE.MeshStandardMaterial({
@@ -203,11 +202,10 @@ function useBuildingMaterials(mat: StyleMaterialConfig) {
 
     const glassMat = new THREE.MeshStandardMaterial({
       color: '#b8d8f8',
-      roughness: 0.05,
-      metalness: 0.1,
+      roughness: 0.1,
+      metalness: 0.05,
       transparent: true,
-      opacity: 0.3,
-      envMapIntensity: 1.5,
+      opacity: 0.35,
     });
 
     const handleMat = new THREE.MeshStandardMaterial({
@@ -1995,11 +1993,11 @@ function SceneContent({
 
   return (
     <>
-      {/* Lighting */}
-      <ambientLight intensity={isNightMode ? 0.3 : 0.6} />
+      {/* Lighting - enhanced for scenes without environment maps */}
+      <ambientLight intensity={isNightMode ? 0.4 : 0.8} />
       <directionalLight
         position={[20, 30, 10]}
-        intensity={isNightMode ? 0.3 : 1.2}
+        intensity={isNightMode ? 0.4 : 1.4}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-30}
@@ -2013,10 +2011,16 @@ function SceneContent({
       {/* Fill light from the opposite side */}
       <directionalLight
         position={[-15, 20, -10]}
-        intensity={isNightMode ? 0.1 : 0.3}
-        color="#c8d8f0"
+        intensity={isNightMode ? 0.2 : 0.5}
+        color="#e8e0d8"
       />
-      {!isNightMode && <hemisphereLight args={['#c0d8ff', '#80a060', 0.4]} />}
+      {/* Additional front fill light */}
+      <directionalLight
+        position={[0, 15, -20]}
+        intensity={isNightMode ? 0.15 : 0.4}
+        color="#fff5e8"
+      />
+      {!isNightMode && <hemisphereLight args={['#c0d8ff', '#80a060', 0.6]} />}
 
       {/* Sky background - render first as base */}
       <color attach="background" args={[isNightMode ? '#0a0f1a' : '#87CEEB']} />
