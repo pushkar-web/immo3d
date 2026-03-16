@@ -5,15 +5,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {
   OrbitControls,
   PointerLockControls,
-  ContactShadows,
-  Sky,
 } from '@react-three/drei';
-import {
-  EffectComposer,
-  Bloom,
-  ToneMapping,
-  Vignette,
-} from '@react-three/postprocessing';
 import * as THREE from 'three';
 import type {
   ParsedLayout, FloorData, FlatData, RoomData, DoorData, WindowData,
@@ -1993,11 +1985,14 @@ function SceneContent({
 
   return (
     <>
-      {/* Lighting - enhanced for scenes without environment maps */}
-      <ambientLight intensity={isNightMode ? 0.4 : 0.8} />
+      {/* Background color */}
+      <color attach="background" args={[isNightMode ? '#0a0f1a' : '#a8d8ea']} />
+
+      {/* Lighting */}
+      <ambientLight intensity={isNightMode ? 0.5 : 1.0} />
       <directionalLight
         position={[20, 30, 10]}
-        intensity={isNightMode ? 0.4 : 1.4}
+        intensity={isNightMode ? 0.5 : 1.5}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-30}
@@ -2008,58 +2003,34 @@ function SceneContent({
         shadow-camera-far={60}
         shadow-bias={-0.0002}
       />
-      {/* Fill light from the opposite side */}
       <directionalLight
         position={[-15, 20, -10]}
-        intensity={isNightMode ? 0.2 : 0.5}
+        intensity={isNightMode ? 0.3 : 0.6}
         color="#e8e0d8"
       />
-      {/* Additional front fill light */}
       <directionalLight
         position={[0, 15, -20]}
-        intensity={isNightMode ? 0.15 : 0.4}
+        intensity={isNightMode ? 0.2 : 0.5}
         color="#fff5e8"
       />
-      {!isNightMode && <hemisphereLight args={['#c0d8ff', '#80a060', 0.6]} />}
-
-      {/* Sky background - render first as base */}
-      <color attach="background" args={[isNightMode ? '#0a0f1a' : '#87CEEB']} />
-      <Sky
-        distance={4500}
-        sunPosition={isNightMode ? [0, -1, 0] : [50, 30, 20]}
-        inclination={isNightMode ? 0 : 0.5}
-        azimuth={0.25}
-      />
-
-      {/* Fog for depth — adjusted per view level */}
-      <fog attach="fog" args={[
-        isNightMode ? '#0a0f1a' : (navigation.level === 'exterior' ? '#b8c8e0' : '#e8e0d0'),
-        navigation.level === 'exterior' ? 40 : navigation.level === 'lobby' ? 20 : 10,
-        navigation.level === 'exterior' ? 150 : navigation.level === 'lobby' ? 80 : 100,
-      ]} />
+      <hemisphereLight args={['#b0d0ff', '#80a060', isNightMode ? 0.3 : 0.7]} />
 
       {/* Camera */}
       <CameraController cameraMode={cameraMode} navigation={navigation} layout={layout} />
 
-      {/* Landscape always rendered so there's always a ground plane / environment */}
+      {/* Landscape */}
       <Landscape buildingWidth={layout.buildingWidth} buildingDepth={layout.buildingDepth} materials={materials} />
-
-      {/* Contact shadows (exterior only) */}
-      {navigation.level === 'exterior' && (
-        <ContactShadows position={[layout.buildingWidth / 2, 0, layout.buildingDepth / 2]} opacity={0.3} scale={50} blur={2} far={20} />
-      )}
 
       {/* Exterior */}
       <ExteriorFacade layout={layout} materials={materials} navigation={navigation} />
 
-      {/* Lobby (ground floor) — always rendered for structural context */}
+      {/* Lobby */}
       <LobbyComponent lobby={layout.lobby} materials={materials} furnitureMaterials={furnitureMaterials} />
 
-      {/* Floors — only render interiors for the active floor to save GPU */}
+      {/* Floors */}
       {layout.floors.map((floor, fi) => {
         const floorY = fi * layout.floorHeight;
         const isActiveFloor = navigation.floorIndex !== null && fi === navigation.floorIndex;
-        // Render interiors only for the selected floor at floor/flat/room levels
         const showInterior = isActiveFloor && (
           navigation.level === 'floor'
           || navigation.level === 'flat'
@@ -2077,7 +2048,6 @@ function SceneContent({
               materials={materials}
             />
             {showInterior && floor.flats.map((flat) => {
-              // At floor level, show all flats; at flat/room level, only show the selected one
               if (navigation.level !== 'floor' && navigation.flatId && navigation.flatId !== flat.id) {
                 return null;
               }
@@ -2097,13 +2067,6 @@ function SceneContent({
           </group>
         );
       })}
-
-      {/* Post-processing — lightweight for fast rendering */}
-      <EffectComposer multisampling={2}>
-        <Bloom luminanceThreshold={0.9} luminanceSmoothing={0.4} intensity={0.2} mipmapBlur />
-        <ToneMapping mode={4} />
-        <Vignette offset={0.3} darkness={0.3} />
-      </EffectComposer>
     </>
   );
 }
@@ -2148,7 +2111,6 @@ function InCanvasLoader() {
   return (
     <group>
       <ambientLight intensity={0.5} />
-      <color attach="background" args={['#87CEEB']} />
     </group>
   );
 }
