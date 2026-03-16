@@ -1069,7 +1069,8 @@ function ExteriorFacade({
   materials: ReturnType<typeof useBuildingMaterials>;
   navigation: NavigationState;
 }) {
-  // Always render exterior facade so the building shell is visible as context at all levels
+  // Hide exterior shell walls when viewing building interiors
+  const showExteriorShell = navigation.level === 'exterior' || navigation.level === 'lobby';
 
   const { buildingWidth: bw, buildingDepth: bd, floorHeight: fh, floors } = layout;
   const totalH = floors.length * fh;
@@ -1077,107 +1078,94 @@ function ExteriorFacade({
 
   return (
     <group>
-      {/* 4 exterior walls */}
-      {/* South */}
-      <mesh position={[bw / 2, totalH / 2, -wallT / 2]} material={materials.exterior} castShadow receiveShadow>
-        <boxGeometry args={[bw + wallT * 2, totalH, wallT]} />
-      </mesh>
-      {/* North */}
-      <mesh position={[bw / 2, totalH / 2, bd + wallT / 2]} material={materials.exterior} castShadow receiveShadow>
-        <boxGeometry args={[bw + wallT * 2, totalH, wallT]} />
-      </mesh>
-      {/* West */}
-      <mesh position={[-wallT / 2, totalH / 2, bd / 2]} material={materials.exterior} castShadow receiveShadow>
-        <boxGeometry args={[wallT, totalH, bd + wallT * 2]} />
-      </mesh>
-      {/* East */}
-      <mesh position={[bw + wallT / 2, totalH / 2, bd / 2]} material={materials.exterior} castShadow receiveShadow>
-        <boxGeometry args={[wallT, totalH, bd + wallT * 2]} />
-      </mesh>
+      {/* 4 exterior walls — only show at exterior/lobby view */}
+      {showExteriorShell && (
+        <>
+          {/* South */}
+          <mesh position={[bw / 2, totalH / 2, -wallT / 2]} material={materials.exterior} castShadow receiveShadow>
+            <boxGeometry args={[bw + wallT * 2, totalH, wallT]} />
+          </mesh>
+          {/* North */}
+          <mesh position={[bw / 2, totalH / 2, bd + wallT / 2]} material={materials.exterior} castShadow receiveShadow>
+            <boxGeometry args={[bw + wallT * 2, totalH, wallT]} />
+          </mesh>
+          {/* West */}
+          <mesh position={[-wallT / 2, totalH / 2, bd / 2]} material={materials.exterior} castShadow receiveShadow>
+            <boxGeometry args={[wallT, totalH, bd + wallT * 2]} />
+          </mesh>
+          {/* East */}
+          <mesh position={[bw + wallT / 2, totalH / 2, bd / 2]} material={materials.exterior} castShadow receiveShadow>
+            <boxGeometry args={[wallT, totalH, bd + wallT * 2]} />
+          </mesh>
 
-      {/* Roof slab */}
-      <mesh position={[bw / 2, totalH + 0.1, bd / 2]} material={materials.concrete} castShadow>
-        <boxGeometry args={[bw + 1, 0.3, bd + 1]} />
-      </mesh>
+          {/* Roof slab */}
+          <mesh position={[bw / 2, totalH + 0.1, bd / 2]} material={materials.concrete} castShadow>
+            <boxGeometry args={[bw + 1, 0.3, bd + 1]} />
+          </mesh>
 
-      {/* Floor demarcation lines (horizontal bands between floors) */}
-      {floors.map((_, fi) => {
-        const fy = fi * fh;
-        return (
-          <group key={`floor-line-${fi}`}>
-            {/* South band */}
-            <mesh position={[bw / 2, fy + 0.02, -wallT / 2 - 0.01]}>
-              <boxGeometry args={[bw + wallT * 2, 0.06, 0.01]} />
-              <meshStandardMaterial color="#888" roughness={0.3} metalness={0.4} />
-            </mesh>
-            {/* North band */}
-            <mesh position={[bw / 2, fy + 0.02, bd + wallT / 2 + 0.01]}>
-              <boxGeometry args={[bw + wallT * 2, 0.06, 0.01]} />
-              <meshStandardMaterial color="#888" roughness={0.3} metalness={0.4} />
-            </mesh>
-            {/* West band */}
-            <mesh position={[-wallT / 2 - 0.01, fy + 0.02, bd / 2]}>
-              <boxGeometry args={[0.01, 0.06, bd + wallT * 2]} />
-              <meshStandardMaterial color="#888" roughness={0.3} metalness={0.4} />
-            </mesh>
-            {/* East band */}
-            <mesh position={[bw + wallT / 2 + 0.01, fy + 0.02, bd / 2]}>
-              <boxGeometry args={[0.01, 0.06, bd + wallT * 2]} />
-              <meshStandardMaterial color="#888" roughness={0.3} metalness={0.4} />
-            </mesh>
-          </group>
-        );
-      })}
+          {/* Floor demarcation lines (horizontal bands between floors) */}
+          {floors.map((_, fi) => {
+            const fy = fi * fh;
+            return (
+              <group key={`floor-line-${fi}`}>
+                <mesh position={[bw / 2, fy + 0.02, -wallT / 2 - 0.01]}>
+                  <boxGeometry args={[bw + wallT * 2, 0.06, 0.01]} />
+                  <meshStandardMaterial color="#888" roughness={0.3} metalness={0.4} />
+                </mesh>
+                <mesh position={[bw / 2, fy + 0.02, bd + wallT / 2 + 0.01]}>
+                  <boxGeometry args={[bw + wallT * 2, 0.06, 0.01]} />
+                  <meshStandardMaterial color="#888" roughness={0.3} metalness={0.4} />
+                </mesh>
+                <mesh position={[-wallT / 2 - 0.01, fy + 0.02, bd / 2]}>
+                  <boxGeometry args={[0.01, 0.06, bd + wallT * 2]} />
+                  <meshStandardMaterial color="#888" roughness={0.3} metalness={0.4} />
+                </mesh>
+                <mesh position={[bw + wallT / 2 + 0.01, fy + 0.02, bd / 2]}>
+                  <boxGeometry args={[0.01, 0.06, bd + wallT * 2]} />
+                  <meshStandardMaterial color="#888" roughness={0.3} metalness={0.4} />
+                </mesh>
+              </group>
+            );
+          })}
 
-      {/* Entrance canopy */}
+          {/* Window rows on south/north facades */}
+          {floors.map((floor, fi) => {
+            const fy = fi * fh;
+            const windowPositions = [3, 7, 11, 15, 19];
+            return windowPositions.map((wx, wi) => (
+              <group key={`ext-win-s-${fi}-${wi}`}>
+                {wx < bw && (
+                  <WindowUnit
+                    position={[wx, fy, -wallT - 0.01]}
+                    rotation={[0, 0, 0]}
+                    width={1.4}
+                    height={1.5}
+                    sillHeight={0.9}
+                    frameMaterial={materials.windowFrame}
+                    glassMaterial={materials.glass}
+                  />
+                )}
+                {wx < bw && (
+                  <WindowUnit
+                    position={[wx, fy, bd + wallT + 0.01]}
+                    rotation={[0, Math.PI, 0]}
+                    width={1.4}
+                    height={1.5}
+                    sillHeight={0.9}
+                    frameMaterial={materials.windowFrame}
+                    glassMaterial={materials.glass}
+                  />
+                )}
+              </group>
+            ));
+          })}
+        </>
+      )}
+
+      {/* Entrance canopy — always visible */}
       <mesh position={[bw / 2, 3.5, -1.5]} material={materials.concrete} castShadow>
         <boxGeometry args={[5, 0.15, 3]} />
       </mesh>
-
-      {/* Entrance pillars */}
-      {[-2, 2].map((xOff, i) => (
-        <mesh key={`pillar-${i}`} position={[bw / 2 + xOff, 1.75, -2.8]} castShadow>
-          <cylinderGeometry args={[0.12, 0.12, 3.5, 12]} />
-          <meshStandardMaterial color="#c0b8a8" roughness={0.4} metalness={0.2} />
-        </mesh>
-      ))}
-
-      {/* Entrance accent light */}
-      <pointLight position={[bw / 2, 3.3, -1.5]} intensity={1} color="#fff5e0" distance={8} />
-
-      {/* Window rows on south/north facades */}
-      {floors.map((floor, fi) => {
-        const fy = fi * fh;
-        const windowPositions = [3, 7, 11, 15, 19];
-        return windowPositions.map((wx, wi) => (
-          <group key={`ext-win-s-${fi}-${wi}`}>
-            {/* South facade windows */}
-            {wx < bw && (
-              <WindowUnit
-                position={[wx, fy, -wallT - 0.01]}
-                rotation={[0, 0, 0]}
-                width={1.4}
-                height={1.5}
-                sillHeight={0.9}
-                frameMaterial={materials.windowFrame}
-                glassMaterial={materials.glass}
-              />
-            )}
-            {/* North facade windows */}
-            {wx < bw && (
-              <WindowUnit
-                position={[wx, fy, bd + wallT + 0.01]}
-                rotation={[0, Math.PI, 0]}
-                width={1.4}
-                height={1.5}
-                sillHeight={0.9}
-                frameMaterial={materials.windowFrame}
-                glassMaterial={materials.glass}
-              />
-            )}
-          </group>
-        ));
-      })}
 
       {/* Balcony rails on exterior */}
       {floors.map((floor, fi) => {
