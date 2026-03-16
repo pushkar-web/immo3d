@@ -5,7 +5,6 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {
   OrbitControls,
   PointerLockControls,
-  Environment,
   ContactShadows,
   Sky,
 } from '@react-three/drei';
@@ -2019,18 +2018,14 @@ function SceneContent({
       />
       {!isNightMode && <hemisphereLight args={['#c0d8ff', '#80a060', 0.4]} />}
 
-      {/* Environment IBL for realistic reflections */}
-      <Environment preset={isNightMode ? 'night' : 'apartment'} background={false} environmentIntensity={isNightMode ? 0.3 : 0.8} />
-
-      {/* Sky background */}
+      {/* Sky background - render first as base */}
+      <color attach="background" args={[isNightMode ? '#0a0f1a' : '#87CEEB']} />
       <Sky
         distance={4500}
         sunPosition={isNightMode ? [0, -1, 0] : [50, 30, 20]}
         inclination={isNightMode ? 0 : 0.5}
         azimuth={0.25}
       />
-      {/* Fallback background color so scene is never blank */}
-      <color attach="background" args={[isNightMode ? '#0a0f1a' : '#87CEEB']} />
 
       {/* Fog for depth — adjusted per view level */}
       <fog attach="fog" args={[
@@ -2192,14 +2187,11 @@ export default function ThreeViewer(props: ThreeViewerProps) {
             antialias: true,
             powerPreference: 'high-performance',
             failIfMajorPerformanceCaveat: false,
-            alpha: false,
           }}
-          onCreated={({ gl, scene }) => {
+          onCreated={({ gl }) => {
             gl.toneMapping = THREE.ACESFilmicToneMapping;
             gl.toneMappingExposure = 1.2;
             gl.outputColorSpace = THREE.SRGBColorSpace;
-            gl.setClearColor('#87CEEB', 1);
-            scene.background = new THREE.Color('#87CEEB');
           }}
           camera={{ fov: 55, near: 0.1, far: 300, position: [11, 25, -20] }}
           style={{ width: '100%', height: '100%' }}

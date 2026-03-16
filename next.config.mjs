@@ -16,15 +16,8 @@ const nextConfig = {
       'utf-8-validate': 'commonjs utf-8-validate',
       bufferutil: 'commonjs bufferutil',
     });
-    // Ensure Three.js and related packages bundle correctly
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      three: 'three',
-    };
     return config;
   },
-  // Optimize output for deployment
-  output: 'standalone',
 };
 
 export default nextConfig;
