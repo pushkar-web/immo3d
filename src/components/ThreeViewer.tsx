@@ -700,7 +700,7 @@ function FurnitureDispatcher({
 // ── Room component ─────────────────────────────────────────────────────────
 
 function RoomComponent({
-  room, offsetX, offsetZ, floorY, materials, furnitureMaterials, showFurniture, onClick,
+  room, offsetX, offsetZ, floorY, materials, furnitureMaterials, showFurniture, showCeiling, onClick,
 }: {
   room: RoomData;
   offsetX: number;
@@ -709,6 +709,7 @@ function RoomComponent({
   materials: ReturnType<typeof useBuildingMaterials>;
   furnitureMaterials: ReturnType<typeof useFurnitureMaterials>;
   showFurniture: boolean;
+  showCeiling: boolean;
   onClick: () => void;
 }) {
   const rx = offsetX + room.x;
@@ -736,7 +737,7 @@ function RoomComponent({
       </mesh>
 
       {/* Ceiling */}
-      {!isBalcony && (
+      {showCeiling && !isBalcony && (
         <mesh position={[w / 2, h, d / 2]} rotation={[Math.PI / 2, 0, 0]} material={materials.ceiling}>
           <planeGeometry args={[w, d]} />
         </mesh>
@@ -841,6 +842,7 @@ function FlatComponent({
   materials: ReturnType<typeof useBuildingMaterials>;
   furnitureMaterials: ReturnType<typeof useFurnitureMaterials>;
   showFurniture: boolean;
+  showCeiling: boolean;
   onRoomClick: (room: RoomData) => void;
 }) {
   return (
@@ -855,6 +857,7 @@ function FlatComponent({
           materials={materials}
           furnitureMaterials={furnitureMaterials}
           showFurniture={showFurniture}
+          showCeiling={showCeiling}
           onClick={() => onRoomClick(room)}
         />
       ))}
@@ -884,7 +887,7 @@ function FlatComponent({
 // ── Floor slab + core ──────────────────────────────────────────────────────
 
 function FloorSlabAndCore({
-  floor, floorY, buildingWidth, buildingDepth, floorHeight, materials,
+  floor, floorY, buildingWidth, buildingDepth, floorHeight, materials, showCeiling,
 }: {
   floor: FloorData;
   floorY: number;
@@ -892,6 +895,7 @@ function FloorSlabAndCore({
   buildingDepth: number;
   floorHeight: number;
   materials: ReturnType<typeof useBuildingMaterials>;
+  showCeiling: boolean;
 }) {
   const core = floor.core;
   // Generate stair steps
@@ -1040,10 +1044,12 @@ function FloorSlabAndCore({
         <boxGeometry args={[core.corridor.width, floorHeight, 0.12]} />
       </mesh>
 
-      {/* Corridor ceiling */}
-      <mesh position={[core.corridor.x + core.corridor.width / 2, floorY + floorHeight - 0.01, core.corridor.z + core.corridor.depth / 2]} material={materials.ceiling}>
-        <boxGeometry args={[core.corridor.width, 0.02, core.corridor.depth]} />
-      </mesh>
+      {/* Corridor ceiling - only when ceiling visible */}
+      {showCeiling && (
+        <mesh position={[core.corridor.x + core.corridor.width / 2, floorY + floorHeight - 0.01, core.corridor.z + core.corridor.depth / 2]} material={materials.ceiling}>
+          <boxGeometry args={[core.corridor.width, 0.02, core.corridor.depth]} />
+        </mesh>
+      )}
 
       {/* Corridor ceiling lights (multiple for even illumination) */}
       {[0.25, 0.5, 0.75].map((t, i) => (
@@ -2012,8 +2018,10 @@ function SceneContent({
       {/* Exterior */}
       <ExteriorFacade layout={layout} materials={materials} navigation={navigation} />
 
-      {/* Lobby */}
-      <LobbyComponent lobby={layout.lobby} materials={materials} furnitureMaterials={furnitureMaterials} />
+      {/* Lobby - only at exterior/lobby views (its walls block interior views) */}
+      {(navigation.level === 'exterior' || navigation.level === 'lobby') && (
+        <LobbyComponent lobby={layout.lobby} materials={materials} furnitureMaterials={furnitureMaterials} />
+      )}
 
       {/* Floors */}
       {layout.floors.map((floor, fi) => {
@@ -2024,6 +2032,8 @@ function SceneContent({
           || navigation.level === 'flat'
           || navigation.level === 'room'
         );
+        // Hide ceilings at floor level (top-down view) so camera can see into rooms
+        const showCeiling = navigation.level !== 'floor';
 
         return (
           <group key={`floor-${fi}`}>
@@ -2034,6 +2044,7 @@ function SceneContent({
               buildingDepth={layout.buildingDepth}
               floorHeight={layout.floorHeight}
               materials={materials}
+              showCeiling={showCeiling}
             />
             {showInterior && floor.flats.map((flat) => {
               if (navigation.level !== 'floor' && navigation.flatId && navigation.flatId !== flat.id) {
@@ -2048,6 +2059,7 @@ function SceneContent({
                   materials={materials}
                   furnitureMaterials={furnitureMaterials}
                   showFurniture={showFurniture}
+                  showCeiling={showCeiling}
                   onRoomClick={onRoomClick}
                 />
               );
